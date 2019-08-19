@@ -29,13 +29,36 @@ public class GlobalServerInit implements IIceInitialize {
     }
 
     public static void main(String[] args) throws Exception {
+        //通过接口, 对外部任何系统,提供分库分表业务规则的实现
+        TomcatJDBC.setSliceFilter(new TomcatJDBC.SliceFilter() {
+            @Override
+            public String filterTableName(String tableName, int table_slice) {
+                System.out.println("当前执行的表: "+ tableName+", 传递的表分片字段: "+ table_slice);
+                if (table_slice> 0){
+                    tableName += "_"+table_slice;
+                }
+                return tableName;  //td_push_msg_2019
+            }
+
+            @Override
+            public String filterDataBaseName(List<String> dbList, int db_slice) {
+                System.out.println("当前可匹配的数据库组: "+ dbList+", 传递的表分片字段: "+ db_slice+" ,默认匹配下标[0]的数据库");
+                // order_00  oerder_01
+                if (db_slice > 0){
+                    int index = db_slice %  8192 % 8;
+                    return dbList.get(index);
+                }
+                return null;
+            }
+        });
         TomcatJDBC.initialize("db",GlobalServerInit.class);
 //        test1();
 
-        test4();
+//        test4();
+//        test5();
 
+        test6();
     }
-
 
 
 
@@ -88,72 +111,42 @@ public class GlobalServerInit implements IIceInitialize {
 
     //分库分表测试
     public static void test4(){
-        //通过接口, 对外部任何系统,提供分库分表业务规则的实现
-                TomcatJDBC.setSliceFilter(new TomcatJDBC.SliceFilter() {
-            @Override
-            public String filterTableName(String tableName, int table_slice) {
-                System.out.println("当前执行的表: "+ tableName+", 传递的表分片字段: "+ table_slice);
-                if (table_slice> 0){
-                    tableName += "_"+table_slice;
-                }
-                return tableName;  //td_push_msg_2019
-            }
-
-            @Override
-            public String filterDataBaseName(List<String> dbList, int db_slice) {
-                System.out.println("当前可匹配的数据库组: "+ dbList+", 传递的表分片字段: "+ db_slice+" ,默认匹配下标[0]的数据库");
-                // order_00  oerder_01
-                if (db_slice > 0){
-                    int index = db_slice %  8192 % 8;
-                    return dbList.get(index);
-                }
-               return null;
-            }
-        });
 
         String sql = "INSERT INTO {{?td_push_msg}} ( unqid, identity, message, date,time, cstatus) VALUES ( ?,?,?,CURRENT_DATE, CURRENT_TIME,?);";
         int i = TomcatJDBC.DAO.update(sql,new Object[]{ 19078296637539328L, 536862721, "push:7##【满减活动（折扣）0520】将于2019-05-20 11:50:00开始进行",1 },536862721,2019);
         System.out.println("分库分表执行结果:" + i);
 
     }
-
-
 
 
     //分库分表测试
     public static void test5(){
-        //通过接口, 对外部任何系统,提供分库分表业务规则的实现
-        TomcatJDBC.setSliceFilter(new TomcatJDBC.SliceFilter() {
-            @Override
-            public String filterTableName(String tableName, int table_slice) {
-                System.out.println("当前执行的表: "+ tableName+", 传递的表分片字段: "+ table_slice);
-                if (table_slice> 0){
-                    tableName += "_"+table_slice;
-                }
-                return tableName;  //td_push_msg_2019
-            }
 
-            @Override
-            public String filterDataBaseName(List<String> dbList, int db_slice) {
-                System.out.println("当前可匹配的数据库组: "+ dbList+", 传递的表分片字段: "+ db_slice+" ,默认匹配下标[0]的数据库");
-                // order_00  oerder_01
-                if (db_slice > 0){
-                    int index = db_slice %  8192 % 8;
-                    return dbList.get(index);
-                }
-                return null;
-            }
-        });
+        String sql1 = "INSERT INTO {{?td_push_msg}} ( unqid, identity, message, date,time, cstatus) VALUES ( ?,?,?,CURRENT_DATE, CURRENT_TIME,?);";
+        Object[] param1 = new Object[]{ 19078296637539329L, 536862721, "11111",1 };
 
-        String sql = "INSERT INTO {{?td_push_msg}} ( unqid, identity, message, date,time, cstatus) VALUES ( ?,?,?,CURRENT_DATE, CURRENT_TIME,?);";
-        int i = TomcatJDBC.DAO.update(sql,new Object[]{ 19078296637539328L, 536862721, "push:7##【满减活动（折扣）0520】将于2019-05-20 11:50:00开始进行",1 },536862721,2019);
+        String sql2 = "UPDATE {{?td_push_msg}} SET message=? WHERE unqid=?";
+        Object[] param2 = new Object[]{"6666",19078296637539328L};
+
+        List<String> sqlList = new ArrayList<>();
+        sqlList.add(sql1);
+        sqlList.add(sql2);
+
+        List<Object[]> paramList = new ArrayList<>();
+        paramList.add(param1);
+        paramList.add(param2);
+
+        int i = TomcatJDBC.DAO.update(sqlList,paramList,536862721,2019);
         System.out.println("分库分表执行结果:" + i);
 
     }
 
+    private static void test6() {
 
-
-
+        String sql = "SELECT * FROM {{?td_push_msg}} INNER JOIN {{?td_signin}}";
+        List<Object[]> lines = TomcatJDBC.DAO.query(sql,null,536862721,2019);
+        TomcatJDBC.DAO.printLines(lines);
+    }
 
 
 

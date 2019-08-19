@@ -210,19 +210,21 @@ public class TomcatJDBC {
                 if(tableList.size() == 0) throw new JDBCException("sql: '"+sql+"' ,no matching table name, please use: {{?TABLE_NAME}}");
 
                 for (int j = 0 ;j < tableList.size();j++){
-                    String tableName  = tableList.get(i);
-                    _tableName = tableName;
+                    String tableName  = tableList.get(j);
+                    _tableName = tableName.trim();
+                    System.out.println(_tableName);
                     if (filter!=null && table_slice > 0){
-                        _tableName = filter.filterTableName(tableName,table_slice);
+                        _tableName = filter.filterTableName(_tableName,table_slice);
                         if (_tableName == null || _tableName.length()==0) throw new JDBCException("'table_slice' is invalid");
                     }
-                    sql = sql.replace(PREFIX_REGEX+tableName+SUFFIX_REGEX, _tableName.trim()); //还原sql语句
+                    sql = sql.replace(PREFIX_REGEX+tableName+SUFFIX_REGEX, _tableName); //还原sql语句
+                    System.out.println(sql);
                 }
                 nativeSqlList.add(sql);
             }
 
             //通过一个表名查询库名列表
-            List<String> dbList = tableDbAllMap.get(_tableName.trim());
+            List<String> dbList = tableDbAllMap.get(_tableName);
             if (dbList == null ) throw new JDBCException("undiscovered database table names: "+ _tableName);
             String dbName = dbList.get(0);//默认选中第一个
             if (filter!=null && db_slice>0){
@@ -267,7 +269,7 @@ public class TomcatJDBC {
         }
 
         /** 查询 */
-        public List<Object[]> query(String sql, Object[] params,int db_slice,int table_slice){
+        public static List<Object[]> query(String sql, Object[] params,int db_slice,int table_slice){
             List<String> sqlList = new ArrayList<>();
             sqlList.add(sql);
             Tuple2<JDBCSessionFacadeWrap,List<String>> tuple = getDaoOp(1, sqlList,db_slice,table_slice);
@@ -288,6 +290,12 @@ public class TomcatJDBC {
 
         public static <T> List<T> query(String sql,Object[] params,Class<T> beanClass){
             return query(sql,params,beanClass,0,0);
+        }
+
+        public static void printLines(List<Object[]> lines){
+            for (int i = 0 ;i<lines.size();i++){
+                JDBCLogger.print("当前第"+i+"行\t"+Arrays.toString(lines.get(i)));
+            }
         }
 
     }

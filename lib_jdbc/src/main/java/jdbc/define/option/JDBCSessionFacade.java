@@ -31,6 +31,7 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
     @Override
     public List<Object[]> query(String sql, Object[] params) {
 //        JDBCLogger.print(getManager().getAddress() + " , " +getManager().getDataBaseName()+"\n\t" + sql+" , "+ Arrays.toString(params));
+        JDBCLogger.print(getManager().getAddress() + " , " +getManager().getDataBaseName());
         List<Object[]> result = new ArrayList<>();
         ResultSet rs = null;
         PreparedStatement pst = null;
