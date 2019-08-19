@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="com.drug.erp.main" target="1.8" />
+      <module name="com.drug.erp.test" target="1.8" />
+      <module name="com.drug.lib_ice.main" target="1.8" />
+      <module name="com.drug.lib_ice.test" target="1.8" />
+      <module name="com.drug.lib_ice_f.main" target="1.8" />
+      <module name="com.drug.lib_ice_f.test" target="1.8" />
+      <module name="com.drug.lib_ice_framewoe.main" target="1.8" />
+      <module name="com.drug.lib_ice_framewoe.test" target="1.8" />
+      <module name="com.drug.lib_yuil.main" target="1.8" />
+      <module name="com.drug.lib_yuil.test" target="1.8" />
+      <module name="com.drug.server_.main" target="1.8" />
+      <module name="com.drug.server_.test" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

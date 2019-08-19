@@ -1,0 +1,7 @@
+
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //引用公共库 
+    implementation project(':lib_utils')
+}

@@ -1,0 +1,21 @@
+
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    //google json 依赖
+    compile 'com.google.code.gson:gson:2.8.5'
+    compile 'com.alibaba:fastjson:1.2.47'
+    //日志依赖
+    compile 'org.apache.logging.log4j:log4j-core:2.9.1'
+    compile 'org.apache.logging.log4j:log4j-api:2.9.1'
+    compile 'cglib:cglib-nodep:3.1'
+    //拼音
+    compile 'com.belerweb:pinyin4j:2.5.1'
+    compile 'javax.mail:javax.mail-api:1.5.5'
+    compile 'com.sun.mail:javax.mail:1.5.5'
+    compile 'org.apache.httpcomponents:httpclient:4.5.3'
+    compile 'org.apache.httpcomponents:httpcore:4.4.8'
+    compile 'org.apache.httpcomponents:httpmime:4.3'
+    compile 'com.google.guava:guava:10.0.1'
+}
+

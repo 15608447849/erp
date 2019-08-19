@@ -1,0 +1,6 @@
+[
+  {
+    "detail": "测试api",
+    "imps": "com.drug.dao.TestApiImps"
+  }
+]

@@ -1,0 +1,5 @@
+dependencies {
+    compile project(':lib_jdbc')
+    compile project(':lib_ice_framework')
+    compile project(':lib_utils')
+}

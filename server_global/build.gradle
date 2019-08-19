@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(':application_share')
+}
+
+shadowJar {
+    baseName = 'erp-global'
+    classifier = null
+    version = null
+}
