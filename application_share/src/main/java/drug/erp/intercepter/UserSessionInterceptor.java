@@ -1,23 +1,23 @@
-package com.drug.intercepter;
+package drug.erp.intercepter;
 
-import com.drug.bean.UserSession;
-import framework.server.IServerInterceptor;
+import drug.erp.bean.vo.UserSession;
+import framework.server.Interceptor;
 import framework.server.IceSessionContext;
 
 /**
  * @Author: leeping
  * @Date: 2019/8/5 15:21
  */
-public class UserSessionInterceptor implements IServerInterceptor {
+public class UserSessionInterceptor implements Interceptor {
     @Override
-    public InterceptorResult interceptor(IceSessionContext context) {
-
+    public boolean intercept(IceSessionContext context) {
         //初始化用户信息
         UserSession userSession = new UserSession();
             userSession.name = "李世平";
             userSession.phone = "15608447849";
         context.putObject(UserSession.class,userSession);
-        return new InterceptorResult(false,null);
+
+        return false;
     }
 
     @Override

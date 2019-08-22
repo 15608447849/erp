@@ -1,7 +1,7 @@
-package com.drug.intercepter;
+package drug.erp.intercepter;
 
-import com.drug.bean.UserSession;
-import framework.server.IServerInterceptor;
+import drug.erp.bean.vo.UserSession;
+import framework.server.Interceptor;
 import framework.server.IceSessionContext;
 
 import java.lang.reflect.Method;
@@ -11,13 +11,13 @@ import java.lang.reflect.Method;
  * @Date: 2019/8/5 15:15
  * 权限检查
  */
-public class AccessInterceptor implements IServerInterceptor {
+public class AccessInterceptor implements Interceptor {
 
     @Override
-    public InterceptorResult interceptor(IceSessionContext context) {
-        boolean isAccess = true; //默认允许
+    public boolean intercept(IceSessionContext context) {
+        boolean isAccess = true; //默认允许访问接口
         String cause = null;
-        Method m = context.method;
+        Method m = context.getCallMethod();
         Permission permission = m.getAnnotation(Permission.class);
         /*判断接口是否对用户权限进行拦截 条件:
          * 1.调用方法没有注解一定拦截权限
@@ -27,12 +27,10 @@ public class AccessInterceptor implements IServerInterceptor {
             UserSession userSession = context.getObject(UserSession.class);
             if(userSession == null) {
                 isAccess = false;
-                cause = "没有登陆的用户信息";
-            }else{
-
+                context.INTERCEPT("用户未登录,找不到用户信息");
             }
         }
-        return new IServerInterceptor.InterceptorResult(!isAccess,cause);
+        return !isAccess ;
     }
 
     @Override

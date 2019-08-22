@@ -1,14 +1,18 @@
 package framework.server;
 
-
-
-
 import java.util.HashMap;
 
 import static jdk.nashorn.tools.Shell.SUCCESS;
 import static util.StringUtils.printExceptInfo;
 
 public class Result{
+
+   private Result(){ }
+
+   static Result factory(){
+      //以后添加缓存等
+      return new Result();
+   }
 
     interface CODE{
       int INTERCEPT = -2;
@@ -23,6 +27,8 @@ public class Result{
 
    private Object data;
 
+   private String error;
+
    private HashMap<String,Object> map;
 
    // 分页信息
@@ -30,10 +36,12 @@ public class Result{
    private Integer pageSize;
    private Integer pageTotal;
 
+   //是否成功
    public boolean isSuccess(){
       return code == CODE.SUCCESS;
    }
 
+   //是否拦截
    public boolean isIntercept(){
       return code == CODE.INTERCEPT;
    }
@@ -49,7 +57,6 @@ public class Result{
       return success(message,null);
    }
 
-
    public Result fail(String message){
       return fail(message,null);
    }
@@ -61,7 +68,7 @@ public class Result{
       return this;
    }
 
-
+   //添加参数
    public Result addParam(String key,Object value){
       if (map == null) map = new HashMap<>();
       map.put(key,value);
@@ -78,18 +85,18 @@ public class Result{
       return this;
    }
 
-
+   //拦截
    public Result intercept(String cause){
       this.code = CODE.INTERCEPT;
       this.message = cause;
       return this;
    }
 
-
+   //错误
    public Result error(String msg,Throwable e) {
       this.code = CODE.ERROR;
       this.message = msg;
-      this.data = printExceptInfo(e);
+      this.error = printExceptInfo(e);
       return this;
    }
 
@@ -100,4 +107,5 @@ public class Result{
       this.pageTotal = pageTotal;
       return this;
    }
+
 }

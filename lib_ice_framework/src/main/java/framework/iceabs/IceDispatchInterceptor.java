@@ -12,19 +12,19 @@ import static Ice.Application.communicator;
  * @Author: leeping
  * @Date: 2019/3/7 12:01
  */
-public class IceServiceDispatchInterceptor extends DispatchInterceptor {
+public class IceDispatchInterceptor extends DispatchInterceptor {
 
     /**服务质量监控单例模式对象*/
-    private static final IceServiceDispatchInterceptor instance = new IceServiceDispatchInterceptor();
+    private static final IceDispatchInterceptor instance = new IceDispatchInterceptor();
 
     /**用来存放我们需要拦截的Ice服务对象，Key为服务ID，value为对应的Servant*/
     private Map<Identity, Object> map ;
 
-    private IceServiceDispatchInterceptor() {
+    private IceDispatchInterceptor() {
         map = new ConcurrentHashMap<>();
     }
 
-    public static IceServiceDispatchInterceptor getInstance(){
+    public static IceDispatchInterceptor getInstance(){
         return instance;
     }
 
@@ -32,8 +32,8 @@ public class IceServiceDispatchInterceptor extends DispatchInterceptor {
      * 添加服务
      */
     public DispatchInterceptor addIceObject(Ice.Identity id, Ice.Object iceObj){
-        map.put(id, iceObj);
-        communicator().getLogger().print("监听服务:" + id.name);
+//        map.put(id, iceObj);
+//        communicator().getLogger().print("监听服务:" + id.name);
         return this;
     }
 

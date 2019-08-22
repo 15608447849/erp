@@ -6,7 +6,7 @@ import java.util.List;
  * @Author: leeping
  * @Date: 2019/4/10 10:37
  */
-public interface IPushMessageStore {
+public interface IPersistentMessage {
 
    class IPMessage{
         public String identityName;

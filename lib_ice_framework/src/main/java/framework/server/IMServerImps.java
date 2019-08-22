@@ -20,23 +20,21 @@ import java.util.concurrent.locks.ReentrantLock;
  * @Date: 2019/4/9 17:57
  * 消息推送 服务端实现
  */
-public class IMServerImps extends _InterfacesDisp implements IPushMessageStore,ObjectRefUtil.IClassScan {
-
-
+public class IMServerImps extends _InterfacesDisp implements IPersistentMessage,ObjectRefUtil.IClassScan {
     //超时时间毫秒数
     private final int PING_TIMEOUT_MAX = 30 * 1000;
+    //可重入锁
     private final ReentrantLock lock = new ReentrantLock();
     /**
      *  当前在线的所有客户端
      */
     private HashMap<String,HashMap<String, ArrayList<PushMessageClientPrx>>> onlineClientMaps;
-
-    protected IOThreadPool pool ;
-
-    protected final Communicator communicator;
-
-    private IPushMessageStore iPushMessageStore;
-
+    //线程池
+    private IOThreadPool pool ;
+    //通讯持有
+    private final Communicator communicator;
+    //消息持久化
+    private IPersistentMessage iPushMessageStore;
 
     //待发送消息存储的队列
     private ConcurrentLinkedQueue<IPMessage> messageQueue;
@@ -44,6 +42,10 @@ public class IMServerImps extends _InterfacesDisp implements IPushMessageStore,O
     IMServerImps(Communicator communicator, String serverName) {
         this.communicator = communicator;
         startPushMessageServer(serverName);
+    }
+
+    protected void print(String message){
+        if (communicator!=null) communicator.getLogger().print(message);
     }
 
     private void startPushMessageServer(String serverName){
@@ -63,24 +65,20 @@ public class IMServerImps extends _InterfacesDisp implements IPushMessageStore,O
             if (iPushMessageStore!=null) return;
             //循环类
             Class<?> cls = Class.forName(classPath);
-            if (!cls.equals(IPushMessageStore.class) && IPushMessageStore.class.isAssignableFrom(cls)){
+            if (!cls.equals(IPersistentMessage.class) && IPersistentMessage.class.isAssignableFrom(cls)){
                 //消息存储实体
-                iPushMessageStore = (IPushMessageStore)ObjectRefUtil.createObject(classPath);
-                communicator.getLogger().print(Thread.currentThread()+"注入数据存储实现:"+ iPushMessageStore.getClass());
+                iPushMessageStore = (IPersistentMessage)ObjectRefUtil.createObject(classPath);
+                print(Thread.currentThread()+"注入数据存储实现:"+ iPushMessageStore.getClass());
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
-
     @Override
     public String accessService(IRequest request, Current __current) {
         return null;
     }
-
-
 
     @Override
     public void online(Identity identity, Current __current)  {
@@ -116,7 +114,7 @@ public class IMServerImps extends _InterfacesDisp implements IPushMessageStore,O
             ArrayList<PushMessageClientPrx> list = map.computeIfAbsent(identityName,k -> new ArrayList<>());
             //3.加入列表
             list.add(clientPrx);
-            communicator.getLogger().print(" --@@@@@@@@@@@@---> "+clientType+" 添加客户端,id = "+ identityName +" ,相同连接数量:"+ list.size());
+            print(" --@@@@@@@@@@@@---> "+clientType+" 添加客户端,id = "+ identityName +" ,相同连接数量:"+ list.size());
         }finally {
             lock.unlock();
         }
@@ -171,7 +169,7 @@ public class IMServerImps extends _InterfacesDisp implements IPushMessageStore,O
                             clientPrx.receive(convertMessage(message));
                             isSend = true;
                         } catch (Exception e) {
-                            communicator.getLogger().error(Thread.currentThread()+" , "+"发送失败, 客户端-"+communicator.identityToString(clientPrx.ice_getIdentity())+" ,msg:"+message.content+" ,错误原因:"+ e);
+                            print(Thread.currentThread()+" , "+"发送失败, 客户端-"+communicator.identityToString(clientPrx.ice_getIdentity())+" ,msg:"+message.content+" ,错误原因:"+ e);
                         }
                     }
                 }
@@ -271,9 +269,9 @@ public class IMServerImps extends _InterfacesDisp implements IPushMessageStore,O
                 while (it3.hasNext()){
                     PushMessageClientPrx clientPrx = it3.next();
                     try {
-                        long t = System.currentTimeMillis();
+//                        long t = System.currentTimeMillis();
                         clientPrx.ice_invocationTimeout(PING_TIMEOUT_MAX).ice_ping();
-//                        communicator.getLogger().print("检测存活: " + clientPrx.ice_getIdentity() +" , 耗时: " + (System.currentTimeMillis() - t)+" 毫秒");
+//                       print("检测存活: " + clientPrx.ice_getIdentity() +" , 耗时: " + (System.currentTimeMillis() - t)+" 毫秒");
                     } catch (Exception e) {
                         it3.remove();
  /*                         e.printStackTrace();

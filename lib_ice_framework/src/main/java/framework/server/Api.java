@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface IceApi {
-    Class imp();
+public @interface Api {
     String detail();
+    Class<?> imp() default void.class;
 }

@@ -22,10 +22,10 @@ import static util.StringUtils.printExceptInfo;
 public class ServerImp extends IMServerImps {
 
     //拦截器
-    private ArrayList<IServerInterceptor> interceptorList  = new ArrayList<>();
+    private ArrayList<Interceptor> interceptorList  = new ArrayList<>();
 
     //服务名
-    private String serverName;
+    String serverName;
 
     //日志
     private Logger logger;
@@ -48,12 +48,12 @@ public class ServerImp extends IMServerImps {
         try {
             //循环类
             Class<?> cls = Class.forName(classPath);
-            if ( !cls.equals(IServerInterceptor.class) && IServerInterceptor.class.isAssignableFrom(cls)){
+            if ( !cls.equals(Interceptor.class) && Interceptor.class.isAssignableFrom(cls)){
                 //拦截器
-                IServerInterceptor iServerInterceptor = (IServerInterceptor)ObjectRefUtil.createObject(classPath);
+                Interceptor iServerInterceptor = (Interceptor)ObjectRefUtil.createObject(classPath);
                 interceptorList.add(iServerInterceptor);
-                communicator.getLogger().print(Thread.currentThread()+"添加一个拦截器:"+ iServerInterceptor.getClass());
-                interceptorList.sort(Comparator.comparingInt(IServerInterceptor::getPriority));
+                print(Thread.currentThread()+"添加拦截器:"+ iServerInterceptor.getClass());
+                interceptorList.sort(Comparator.comparingInt(Interceptor::getPriority));
             }
 
         } catch (Exception e) {
@@ -64,13 +64,13 @@ public class ServerImp extends IMServerImps {
     //打印参数
     private String printParam(IRequest request, Current __current,String ditail) {
             try {
-                StringBuilder sb = new StringBuilder("服务名:"+serverName+",接入信息\n");
+                StringBuilder sb = new StringBuilder();
                 if (__current != null) {
-                    sb.append(__current.con.toString().split("\n")[1]);
+                    sb.append(__current.con.toString().split("\n")[1].replace("remote address =","客户端地址:"));
                 }else{
                     sb.append("本地调用");
                 }
-                sb.append("\t位置: " + request.pkg +"." + request.cls +"."+request.method+",说明: "+ ditail);
+                sb.append("\t接口路径: " + request.pkg +"." + request.cls +"."+request.method+"\t说明: "+ ditail);
                 if(!StringUtils.isEmpty(request.param.token)){
                     sb.append( "\ntoken:\t"+ request.param.token);
                 }
@@ -91,39 +91,24 @@ public class ServerImp extends IMServerImps {
     }
 
     //检测,查询配置的包路径 - 优先 客户端指定的全路径
-    private void check(IRequest request) throws Exception {
+    private void check(IRequest request) throws IllegalArgumentException {
 
-        if (StringUtils.isEmpty(request.method)) throw new Exception("没有指定相关服务方法");
+        if (StringUtils.isEmpty(request.method)) throw new IllegalArgumentException("没有指定相关服务方法");
 
-        if (StringUtils.isEmpty(request.cls)) throw new Exception("没有指定相关服务类路径");
+        if (StringUtils.isEmpty(request.cls)) throw new IllegalArgumentException("没有指定相关服务类路径");
 
         if (StringUtils.isEmpty(request.pkg)){
-            if (StringUtils.isEmpty(pkgPath)) throw new Exception("没有指定相关服务包路径");
+            if (StringUtils.isEmpty(pkgPath)) throw new IllegalArgumentException("没有指定相关服务包路径");
             request.pkg = pkgPath;
         }
     }
 
-
-
-    //产生平台上下文对象
-    private IceSessionContext generateContext(Current current, IRequest request) throws Exception {
-            Object obj = ObjectRefUtil.createObject(
-                    IceSessionContext.class,
-                    new Class[]{Current.class, IRequest.class},
-                    current,request
-                    );
-            if (obj instanceof IceSessionContext) return (IceSessionContext) obj;
-            throw new RuntimeException("当前系统没有实现全局Context");
-    }
-
     //拦截
-    private IServerInterceptor.InterceptorResult interceptor(IceSessionContext context){
-        IServerInterceptor.InterceptorResult result = null;
-        for (IServerInterceptor iServerInterceptor : interceptorList) {
-            result = iServerInterceptor.interceptor(context);
-            if (result.isInterceptor()) break;
+    private boolean interceptor(IceSessionContext context){
+        for (Interceptor iServerInterceptor : interceptorList) {
+            if ( iServerInterceptor.intercept(context)) return true;
         }
-        return result;
+        return false;
     }
 
     //打印结果
@@ -148,7 +133,8 @@ public class ServerImp extends IMServerImps {
         boolean outPrint = false;
         try {
             check(request);
-            IceSessionContext context = generateContext(__current,request);//产生context
+            //产生context
+            IceSessionContext context = new IceSessionContext(__current,request);
             if (context.debug != null){
                 inPrint = context.debug.inPrint();
                 outPrint = context.debug.outPrint();
@@ -156,9 +142,13 @@ public class ServerImp extends IMServerImps {
             }
             if (inPrint) logger.print(printParam(request,__current,context.api.detail()));
 
-            IServerInterceptor.InterceptorResult r = interceptor(context);//拦截器
-            if (r.isInterceptor()) {
-                result = new Result().intercept(r.getCause());
+            boolean isInterceptor = interceptor(context);//拦截器
+            if (isInterceptor) {
+                Result r = context.getResult();
+               if (!r.isIntercept()){
+                   r = Result.factory().intercept("已拦截请求");
+               }
+                result = r;
             }else{
                 //具体业务实现调用 返回值不限制
                 long time = System.currentTimeMillis();
@@ -172,7 +162,7 @@ public class ServerImp extends IMServerImps {
                 targetEx =((InvocationTargetException)e).getTargetException();
             }
             logger.error(printExceptInfo(targetEx));
-            result = new Result().error("捕获异常",targetEx);
+            result = Result.factory().error("请求执行错误",targetEx);
         }
         String resultString =  printResult(result);
         if (outPrint) logger.print("返  回  信  息 :\t " +resultString );

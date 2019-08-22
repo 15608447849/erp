@@ -8,7 +8,7 @@ buildscript {
 }
 
 allprojects {
-    group 'com.drug'
+    group 'drug.erp'
     version '1.0'
 }
 

@@ -1,4 +1,4 @@
-package com.drug.intercepter;
+package drug.erp.intercepter;
 
 
 
@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Permission {
-    boolean ignore() default false; //检查匿名访问 , 默认不允许(false)
+    boolean ignore() default false; //检查匿名访问,默认不允许(false)
 }
