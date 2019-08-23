@@ -1,0 +1,8 @@
+.gradle/
+Z_SERVERSTART/
+application_share/build/
+lib_ice_framework/build/
+*.class
+lib_jdbc/build/
+lib_utils/build/
+server_global/build/
