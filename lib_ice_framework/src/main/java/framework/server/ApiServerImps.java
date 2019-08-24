@@ -19,7 +19,7 @@ import static util.StringUtils.printExceptInfo;
  * ice bind type = ::inf::Interfaces
  * 接口实现
  */
-public class ServerImp extends IMServerImps {
+public class ApiServerImps extends IMServerImps {
 
     //拦截器
     private ArrayList<Interceptor> interceptorList  = new ArrayList<>();
@@ -33,7 +33,7 @@ public class ServerImp extends IMServerImps {
     //服务对象的反射包路径
     private String pkgPath;
 
-    ServerImp(Communicator communicator,String serverName) {
+    ApiServerImps(Communicator communicator, String serverName) {
         super(communicator,serverName);
         this.serverName = serverName;
         this.logger = communicator.getLogger();
@@ -52,7 +52,7 @@ public class ServerImp extends IMServerImps {
                 //拦截器
                 Interceptor iServerInterceptor = (Interceptor)ObjectRefUtil.createObject(classPath);
                 interceptorList.add(iServerInterceptor);
-                print(Thread.currentThread()+"添加拦截器:"+ iServerInterceptor.getClass());
+//                print(Thread.currentThread()+"添加拦截器:"+ iServerInterceptor.getClass());
                 interceptorList.sort(Comparator.comparingInt(Interceptor::getPriority));
             }
 
@@ -66,11 +66,11 @@ public class ServerImp extends IMServerImps {
             try {
                 StringBuilder sb = new StringBuilder();
                 if (__current != null) {
-                    sb.append(__current.con.toString().split("\n")[1].replace("remote address =","客户端地址:"));
+                    sb.append(__current.con.toString().split("\n")[1].replace("remote address =","客户端地址:").trim());
                 }else{
                     sb.append("本地调用");
                 }
-                sb.append("\t接口路径: " + request.pkg +"." + request.cls +"."+request.method+"\t说明: "+ ditail);
+                sb.append(",路径: " + request.pkg +"." + request.cls +"."+request.method+",详情: "+ ditail);
                 if(!StringUtils.isEmpty(request.param.token)){
                     sb.append( "\ntoken:\t"+ request.param.token);
                 }
@@ -128,19 +128,13 @@ public class ServerImp extends IMServerImps {
     @Override
     public String accessService(IRequest request, Current __current) {
         Object result;
-        boolean inPrint = true;
-        boolean timePrint = false;
-        boolean outPrint = false;
+        Api api = null;
         try {
             check(request);
             //产生context
             IceSessionContext context = new IceSessionContext(__current,request);
-            if (context.debug != null){
-                inPrint = context.debug.inPrint();
-                outPrint = context.debug.outPrint();
-                timePrint = context.debug.timePrint();
-            }
-            if (inPrint) logger.print(printParam(request,__current,context.api.detail()));
+            api = context.getApi();
+            if (api.inPrint()) logger.print(printParam(request,__current,api.detail()));
 
             boolean isInterceptor = interceptor(context);//拦截器
             if (isInterceptor) {
@@ -153,7 +147,7 @@ public class ServerImp extends IMServerImps {
                 //具体业务实现调用 返回值不限制
                 long time = System.currentTimeMillis();
                 result = context.call();
-                if (timePrint) logger.print("调用耗时: " + (System.currentTimeMillis() - time) +" ms\n");
+                if (api.timePrint()) logger.print("执行耗时: " + (System.currentTimeMillis() - time) +" ms");
             }
 
         } catch (Exception e) {
@@ -165,7 +159,7 @@ public class ServerImp extends IMServerImps {
             result = Result.factory().error("请求执行错误",targetEx);
         }
         String resultString =  printResult(result);
-        if (outPrint) logger.print("返  回  信  息 :\t " +resultString );
+        if (api!=null && api.outPrint()) logger.print("响应数据:\t" +resultString );
         return resultString;
     }
 

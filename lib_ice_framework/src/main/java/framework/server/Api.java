@@ -12,6 +12,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Api {
-    String detail();
-    Class<?> imp() default void.class;
+    String detail() default "";
+    Class<?> imp() default void.class;//指向实现类
+    boolean inPrint() default true; // 是否打印传参信息
+    boolean outPrint() default true;// 是否打印调用结果
+    boolean timePrint() default true;//是否打印调用时间
 }

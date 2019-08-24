@@ -52,7 +52,6 @@ public class IceDispatchInterceptor extends DispatchInterceptor {
     /**
      * 移除服务
      */
-
     @Override
     public DispatchStatus dispatch(Request request) {
         if (!systemRunning)  return DispatchStatus.DispatchUserException;
@@ -75,3 +74,9 @@ public class IceDispatchInterceptor extends DispatchInterceptor {
          return "未知";
     }
 }
+
+
+//        IceDispatchInterceptor.getInstance().startServer();
+//        IceDispatchInterceptor interceptor = IceDispatchInterceptor.getInstance();
+//        _adapter.add(interceptor.addIceObject(identity,object),identity);
+//        _adapter.add(interceptor.addIceObject(identity,object),identity);

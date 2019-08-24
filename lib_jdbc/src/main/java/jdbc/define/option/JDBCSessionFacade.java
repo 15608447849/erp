@@ -31,7 +31,7 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
     @Override
     public List<Object[]> query(String sql, Object[] params) {
 //        JDBCLogger.print(getManager().getAddress() + " , " +getManager().getDataBaseName()+"\n\t" + sql+" , "+ Arrays.toString(params));
-        JDBCLogger.print(getManager().getAddress() + " , " +getManager().getDataBaseName());
+//        JDBCLogger.print(getManager().getAddress() + " , " +getManager().getDataBaseName());
         List<Object[]> result = new ArrayList<>();
         ResultSet rs = null;
         PreparedStatement pst = null;
@@ -49,7 +49,7 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
                 result.add(objs);
             }
         } catch (SQLException e) {
-            throw new JDBCException(sql,e);
+            throw new JDBCException(sql + "\n" + Arrays.toString(params),e);
         } finally {
             closeSqlObject(pst, rs);
         }
@@ -118,8 +118,10 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
             setParameters(pst, params);
             result = pst.executeUpdate();
         } catch (SQLException e) {
+            JDBCLogger.print("【数据库错误】"+getManager().getDataBaseName() + " , "+ sql +" , "+ Arrays.toString(params));
             if (e instanceof com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException){
                 JDBCLogger.print("插入数据失败,存在相同唯一键数据: "+ e);
+                result = -1;
             }else{
                 throw new JDBCException(e);
             }

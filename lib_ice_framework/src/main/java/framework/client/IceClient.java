@@ -36,7 +36,7 @@ public class IceClient {
 
     private final String[] args ;
 
-    private int timeout = 30000;
+    private int timeout = 300000;
 
     public IceClient(String tag,String serverAdds) {
         StringBuffer sb = new StringBuffer("--Ice.Default.Locator="+tag+"/Locator");

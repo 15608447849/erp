@@ -24,16 +24,14 @@ public abstract class IceBoxServerAbs implements Service {
 
     @Override
     public void start(String name, Communicator communicator, String[] args) {
-        Log4j.info("服务参数: " + Arrays.toString(args));
+        Log4j.info("服务组: " + Arrays.toString(args));
         String repGroup = args.length >=1 ? args[0] : null;
         ApplicationPropertiesBase.initStaticFields(IceProperties.class);
         initIceLogger(name,(CommunicatorI) communicator);
         _communicator = communicator;
         _adapter = _communicator.createObjectAdapter(name);
-        //创建servant
-        Ice.Object object = specificServices(name);
         //关联servant
-        relationID(name,object,communicator,repGroup);
+        relationID(name,communicator,repGroup);
         //初始化应用
         initApplication();
         //激活适配器
@@ -42,18 +40,21 @@ public abstract class IceBoxServerAbs implements Service {
 
     //初始化 系统应用
     private void initApplication() {
-        long time = System.currentTimeMillis();
-        ObjectRefUtil.scanJarAllClass(classPath -> {
-            try {
-                if (classPath.startsWith(IceProperties.pkgSrv)){
-                    findJarAllClass(classPath);
-                }
-            } catch (Exception ignored) { }
+        try {
+            long time = System.currentTimeMillis();
+            ObjectRefUtil.scanJarAllClass(classPath -> {
+                try {
+                    if (classPath.startsWith(IceProperties.pkgSrv)){
+                        findJarAllClass(classPath);
+                    }
+                } catch (Exception ignored) { }
 
-        });
-        initialization();
-        _communicator.getLogger().print("应用初始化耗时:"+ (System.currentTimeMillis() - time)+"ms");
-//        IceDispatchInterceptor.getInstance().startServer();
+            });
+            initialization();
+            _communicator.getLogger().print("应用初始化耗时:"+ (System.currentTimeMillis() - time)+"ms");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void initIceLogger(String name,CommunicatorI ic) {
@@ -64,18 +65,17 @@ public abstract class IceBoxServerAbs implements Service {
         }
     }
 
-    private void relationID(String serverName,Ice.Object object,Communicator communicator,String groupName) {
-//        IceDispatchInterceptor interceptor = IceDispatchInterceptor.getInstance();
+    private void relationID(String serverName,Communicator communicator,String groupName) {
+        //创建servant
+        Ice.Object object = specificServices(serverName);
         Identity identity = communicator.stringToIdentity(serverName);
-//        _adapter.add(interceptor.addIceObject(identity,object),identity);
         _adapter.add(object,identity);
         //配置rpc组信息
         if (groupName == null || groupName.length()==0) return ;
         identity = communicator.stringToIdentity(groupName);
-//        _adapter.add(interceptor.addIceObject(identity,object),identity);
         _adapter.add(object,identity);
         addRpcGroup(groupName);
-        _communicator.getLogger().print("服务: "+serverName +" ,加入负载均衡组 " + groupName);
+        _communicator.getLogger().print("服务: "+serverName +" ,加入组: " + groupName);
     }
 
     protected abstract Object specificServices(String serverName);
@@ -91,20 +91,6 @@ public abstract class IceBoxServerAbs implements Service {
     public void stop() {
         _adapter.destroy();
         _communicator.getLogger().print("服务销毁");
-    }
-
-    public static void main(String[] args) {
-//        args = new String[]{"[--IceBox.Server 666", "--Ice.MessageSizeMax=4096", "--Ice.Config=C:\\IDEAWORK\\erp\\Z_SERVERSTART\\node-global/./node-db/servers/globalServer-group-box-1/config/config"};
-        args = new String[]{"--IceBox.Service.globalService_1=framework.server.ServerIceBoxImp 123456", "--Ice.MessageSizeMax=4096", "--Ice.Config=C:\\IDEAWORK\\erp\\Z_SERVERSTART\\node-global/./node-db/servers/globalServer-group-box-1/config/config"};
-        IceLog4jLogger log4jLogger = new IceLog4jLogger("system");
-        log4jLogger.print("启动服务 ,args = " + Arrays.toString(args));
-        InitializationData initData = new InitializationData();
-        initData.properties = Util.createProperties();
-        initData.properties.setProperty("Ice.Admin.DelayCreation", "1");
-        initData.logger = log4jLogger;
-        IceBox.Server server = new IceBox.Server();
-        int code = server.main("IceBox.Server", args, initData);
-        System.exit(code);
     }
 
 }

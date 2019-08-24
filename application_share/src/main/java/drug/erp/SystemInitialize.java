@@ -1,9 +1,12 @@
 package drug.erp;
 
+import drug.erp.constant.DBConst;
 import framework.server.Initializer;
 import jdbc.define.log.JDBCLogger;
 import jdbc.imp.TomcatJDBC;
 import util.Log4j;
+
+import java.util.List;
 
 import static Ice.Application.communicator;
 
@@ -37,8 +40,9 @@ public class SystemInitialize implements Initializer {
 
     private void initDataBaseProp(String serverName){
         try {
-            Log4j.info("加载数据库连接池配置目录: "+ serverName);
-            TomcatJDBC.initialize(serverName,SystemInitialize.class);
+            List<String> configs = DBConst.serverDBConfigFiles(serverName);
+            Log4j.info(serverName+" 加载数据库连接池配置文件: "+ configs);
+            TomcatJDBC.initialize(configs);
         } catch (Exception e) {
             Log4j.error(e);
         }

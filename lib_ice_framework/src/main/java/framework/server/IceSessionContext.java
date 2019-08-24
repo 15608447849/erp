@@ -9,8 +9,10 @@ import framework.gen.inf.IRequest;
 import objectref.ObjectPoolManager;
 import objectref.ObjectRefUtil;
 import util.GsonUtils;
+import util.Log4j;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,6 +22,7 @@ import java.util.List;
  * @Date: 2019/3/8 14:32
  */
 public class IceSessionContext {
+
     //日志输出
     private final Logger logger;
     //当前连接对象
@@ -29,10 +32,13 @@ public class IceSessionContext {
     //实际调用者
     private Class<?> callClass;
     private Method callMethod;
-    IceDebug debug;
-    Api api;
+    private Api api;
     //客户端返回值
     private Result result;
+
+    public Api getApi() {
+        return api;
+    }
 
     public Logger getLogger() {
         return logger;
@@ -100,14 +106,12 @@ public class IceSessionContext {
         String classPath = packagePath + "."+ className;
 
         this.callClass = Class.forName(classPath);
-
         this.callMethod = callClass.getDeclaredMethod(methodName,this.getClass());
-        this.debug = callMethod.getAnnotation(IceDebug.class);
+
         this.api = callMethod.getAnnotation(Api.class);
         if (api==null) throw new IllegalAccessException("未定义的API接口声明");
         Class<?> imp = api.imp();
         if (imp != void.class) this.callClass = imp;
-//        this.callMethod = callClass.getMethod(refMed,this.getClass());
     }
 
 
@@ -136,8 +140,9 @@ public class IceSessionContext {
         return value;
     }
 
-   public void putObject(Class<?> cls,Object object){
-        additionalObjectMap.put(cls,object);
+   public void putObject(Object object){
+        if (object==null) return;
+        additionalObjectMap.put(object.getClass(),object);
    }
 
    //获取一个对象
@@ -175,6 +180,13 @@ public class IceSessionContext {
     public <T> List<T> getJsonParamConvertList(Class<T> cls) {
         if (param!=null){
             if (param.json!=null && param.json.length()>0) return GsonUtils.json2List(param.json,cls);
+        }
+        return null;
+    }
+
+    public String getToken(){
+        if (param!=null){
+            if (param.token!=null && param.token.length() > 0) return param.token;
         }
         return null;
     }

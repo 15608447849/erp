@@ -31,17 +31,35 @@ public class TomcatJDBC {
     //一个表名可能对应的多个库名
     private final static Map<String,List<String>> tableDbAllMap = new HashMap<>();
 
-
+    /**使用一个目录中所有配置文件初始化连接池*/
     public static void initialize(String dirName,Class clazz) throws Exception{
-
       List<File> files = getDicFile(dirName,clazz);
-        if (files.size() == 0) throw new IllegalArgumentException("dir name = '"+dirName+"' , No connection profile exists.");
-      for (File file : files){
-          try(InputStream is = new FileInputStream(file)){
-            genPoolObjectAlsoAddGroup(is);
-          }
-      }
-      genTableInfo();
+      if (files.size() == 0) throw new IllegalArgumentException("dir name = '"+dirName+"' , No connection profile exists.");
+    }
+
+    /**使用多个配置文件名 在resource中查询配置并初始化连接池*/
+    public static void initialize(String... configList) throws Exception{
+      initialize(Arrays.asList(configList));
+    }
+
+    /**使用多个配置文件名 在resource中查询配置并初始化连接池*/
+    public static void initialize(List<String> configList) throws Exception{
+        for (String fileName : configList){
+            try(InputStream is = getResourceConfig(fileName)){
+                genPoolObjectAlsoAddGroup(is);
+            }
+        }
+        genTableInfo();
+    }
+
+    /**多个配置文件初始化连接池*/
+    public static void  initialize(File... files)throws Exception{
+        for (File file : files){
+            try(InputStream is = new FileInputStream(file)){
+                genPoolObjectAlsoAddGroup(is);
+            }
+        }
+        genTableInfo();
     }
 
     private static List<File> getDicFile(String dirName,Class clazz) throws Exception {
@@ -80,7 +98,17 @@ public class TomcatJDBC {
         return Arrays.asList(Objects.requireNonNull(dir.listFiles()));
     }
 
+    private static InputStream getResourceConfig(String config) throws FileNotFoundException {
+        //优先加载外部,外部不存在, 加载resource
+        String dirPath = new File(TomcatJDBC.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getParent();
+        File file = new File(dirPath+"/resources/"+config);
+        if (file.exists() && file.isFile() && file.length() > 0) return new FileInputStream(file);
+        return TomcatJDBC.class.getClassLoader().getResourceAsStream(config);
+    }
+
+
     private static void genPoolObjectAlsoAddGroup(InputStream is) {
+        if (is == null) return;
         TomcatJDBCPool pool = new TomcatJDBCPool();
         pool.initialize(is);
         String databaseName = pool.getDataBaseName();
@@ -136,7 +164,7 @@ public class TomcatJDBC {
         List<TomcatJDBCPool> list = poolGroupMap.get(databaseName);
         if (list!=null){
             int index = 0;
-            if (!isMaster && list.size() > 0){
+            if (!isMaster && list.size() > 1){
                 index = new Random().nextInt(list.size()-1)+1; //排除主库的其他所有从库
             }
             return new JDBCSessionFacade(list.get(index));
@@ -212,13 +240,12 @@ public class TomcatJDBC {
                 for (int j = 0 ;j < tableList.size();j++){
                     String tableName  = tableList.get(j);
                     _tableName = tableName.trim();
-                    System.out.println(_tableName);
+
                     if (filter!=null && table_slice > 0){
                         _tableName = filter.filterTableName(_tableName,table_slice);
                         if (_tableName == null || _tableName.length()==0) throw new JDBCException("'table_slice' is invalid");
                     }
                     sql = sql.replace(PREFIX_REGEX+tableName+SUFFIX_REGEX, _tableName); //还原sql语句
-                    System.out.println(sql);
                 }
                 nativeSqlList.add(sql);
             }
@@ -276,7 +303,7 @@ public class TomcatJDBC {
             return tuple.getValue0().query(tuple.getValue1().get(0),params);
         }
 
-        public List<Object[]> query(String sql, Object[] params){
+        public static List<Object[]> query(String sql, Object[] params){
             return query(sql,params,0,0);
         }
 

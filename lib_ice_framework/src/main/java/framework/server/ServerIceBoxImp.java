@@ -3,7 +3,6 @@ package framework.server;
 import Ice.Object;
 import framework.iceabs.IceBoxServerAbs;
 import objectref.ObjectRefUtil;
-import util.Log4j;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -15,13 +14,13 @@ import java.util.List;
  */
 public class ServerIceBoxImp extends IceBoxServerAbs {
     public static String rpcGroupName;
-    public static ServerImp INSTANCE;
+    public static ApiServerImps INSTANCE;
     private static final List<Initializer> list = new ArrayList<>();
 
     @Override
     protected Object specificServices(String serverName) {
         if (INSTANCE == null){
-            INSTANCE =  new ServerImp(_communicator,serverName);
+            INSTANCE =  new ApiServerImps(_communicator,serverName);
         }
         return INSTANCE;
     }
@@ -35,7 +34,7 @@ public class ServerIceBoxImp extends IceBoxServerAbs {
         Class<?> cls = Class.forName(classPath);
         if ( !cls.equals(Initializer.class) && Initializer.class.isAssignableFrom(cls)){
             list.add(((Initializer) ObjectRefUtil.createObject(cls,null)));
-            _communicator.getLogger().print("添加初始化类: "+ classPath);
+//            _communicator.getLogger().print("添加初始化类: "+ classPath);
         }
         if (INSTANCE != null){
             ((ObjectRefUtil.IClassScan)INSTANCE).callback(classPath);

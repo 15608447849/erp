@@ -23,7 +23,7 @@ public class Result{
 
    private int code = CODE.FAIL;
 
-   private String message = null;
+   private String message;
 
    private Object data;
 
@@ -49,6 +49,12 @@ public class Result{
    public Result success(String message,Object data){
       this.code = SUCCESS;
       this.message = message;
+      this.data = data;
+      return this;
+   }
+
+   public Result success(Object data){
+      this.code = SUCCESS;
       this.data = data;
       return this;
    }

@@ -10,7 +10,7 @@ import util.Log4j;
  */
 public class IceLog4jLogger implements Ice.Logger {
 
-    private static final String MESSAGE_FORMAT = "【%s】\t%s";
+    private static final String MESSAGE_FORMAT = "【%s】 %s";
 
     private final org.apache.logging.log4j.Logger logger;
 
@@ -28,7 +28,8 @@ public class IceLog4jLogger implements Ice.Logger {
 
     @Override
     public void error(String message) {
-        logger.error( String.format(MESSAGE_FORMAT,prefix,message) );
+//        logger.error( String.format(MESSAGE_FORMAT,prefix,message) );
+        logger.error( message );
     }
 
     @Override
@@ -38,16 +39,19 @@ public class IceLog4jLogger implements Ice.Logger {
 
     @Override
     public void print(String message) {
-        logger.debug( String.format(MESSAGE_FORMAT,prefix,message));
+//        logger.debug( String.format(MESSAGE_FORMAT,prefix,message));
+        logger.info( message );
     }
 
     @Override
     public void trace(String category, String message) {
-        logger.trace(category, String.format(MESSAGE_FORMAT,prefix,message));
+//        logger.trace(category, String.format(MESSAGE_FORMAT,prefix,message));
+        logger.trace(category+" , "+message);
     }
 
     @Override
     public void warning(String message) {
-        logger.warn( String.format(MESSAGE_FORMAT,prefix,message));
+//        logger.warn( String.format(MESSAGE_FORMAT,prefix,message));
+        logger.warn( message);
     }
 }

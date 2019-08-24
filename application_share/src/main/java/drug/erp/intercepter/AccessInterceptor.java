@@ -1,6 +1,5 @@
 package drug.erp.intercepter;
 
-import drug.erp.bean.vo.UserSession;
 import framework.server.Interceptor;
 import framework.server.IceSessionContext;
 

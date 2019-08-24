@@ -1,8 +1,8 @@
 package drug.erp.intercepter;
-
-import drug.erp.bean.vo.UserSession;
 import framework.server.Interceptor;
 import framework.server.IceSessionContext;
+import util.GsonUtils;
+import util.Log4j;
 
 /**
  * @Author: leeping
@@ -11,12 +11,10 @@ import framework.server.IceSessionContext;
 public class UserSessionInterceptor implements Interceptor {
     @Override
     public boolean intercept(IceSessionContext context) {
-        //初始化用户信息
-        UserSession userSession = new UserSession();
-            userSession.name = "李世平";
-            userSession.phone = "15608447849";
-        context.putObject(UserSession.class,userSession);
-
+        //根据 token,尝试获取用户信息
+        String token = context.getToken();
+        UserSession userSession = UserSession.tryGetUserInfo(token);
+        context.putObject(userSession);
         return false;
     }
 

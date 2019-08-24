@@ -73,8 +73,6 @@ public class ObjectRefUtil {
         try {
             File file = new File(ObjectRefUtil.class.getProtectionDomain().getCodeSource().getLocation().getFile());
             JarFile jarFile = new JarFile(file);
-            List<JarEntry> jarEntryList = new ArrayList<>();
-
             Enumeration<JarEntry> enumeration = jarFile.entries();
             while (enumeration.hasMoreElements()) {
                 JarEntry entry = enumeration.nextElement();
