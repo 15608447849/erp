@@ -17,7 +17,6 @@ import java.util.List;
  */
 public class MasterSlaveSyncJDBCFacadeWrap extends JDBCSessionFacadeWrap{
 
-
     public MasterSlaveSyncJDBCFacadeWrap(JDBCSessionFacade op) {
         super(op);
     }

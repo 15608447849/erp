@@ -8,6 +8,7 @@ import jdbc.define.option.JDBCSessionFacadeWrap;
 import jdbc.define.tuples.Tuple2;
 import jdbc.define.tuples.Tuple3;
 import jdbc.imp.TomcatJDBCPool;
+import sun.rmi.runtime.Log;
 
 import java.io.*;
 import java.net.URL;
@@ -106,11 +107,12 @@ public class TomcatJDBC {
         return TomcatJDBC.class.getClassLoader().getResourceAsStream(config);
     }
 
-
     private static void genPoolObjectAlsoAddGroup(InputStream is) {
         if (is == null) return;
         TomcatJDBCPool pool = new TomcatJDBCPool();
         pool.initialize(is);
+        //启动同步
+        pool.launchSync();
         String databaseName = pool.getDataBaseName();
         List<TomcatJDBCPool> list = poolGroupMap.get(pool.getDataBaseName());
         if (list == null){
@@ -118,7 +120,7 @@ public class TomcatJDBC {
             poolGroupMap.put(databaseName,list);
         }
         list.add(pool);
-        //排序 , 为 主从同步/读写分离 基础 , 定义, 第一个为 主数据库 , 其次都为从数据库
+        //排序 , 为 主从同步/读写分离 基础 , 规则定义, 第一个为 主数据库 , 其次都为从数据库
         list.sort(Comparator.comparing(TomcatJDBCPool::getSeq));
     }
 
@@ -134,8 +136,7 @@ public class TomcatJDBC {
             list = entry.getValue();
             pool = list.get(0);
             genPoolTableAll(pool);
-            //启动同步
-            pool.launchSync();
+
         }
     }
 
@@ -161,19 +162,46 @@ public class TomcatJDBC {
 
 
     public static JDBCSessionFacade getFacade(String databaseName,boolean isMaster) {
+
         List<TomcatJDBCPool> list = poolGroupMap.get(databaseName);
         if (list!=null){
+            JDBCSessionFacade facade;
             int index = 0;
             if (!isMaster && list.size() > 1){
                 index = new Random().nextInt(list.size()-1)+1; //排除主库的其他所有从库
             }
-            return new JDBCSessionFacade(list.get(index));
+            facade = new JDBCSessionFacade(list.get(index));
+            if (list.size()>1){
+                // 代表一定可以切换一个数据库,
+                // 检查连接是否可用,
+                // 不可用获取任意一个有效的数据库连接
+                return checkDBConnection(facade,list);
+            }else{
+                return facade;
+            }
+
         }
        return null;
     }
 
-    public static JDBCSessionFacade getFacade(String databaseName) {
 
+    private static JDBCSessionFacade checkDBConnection(JDBCSessionFacade facade, List<TomcatJDBCPool> list) {
+
+        if (facade.checkDBConnectionValid()) return facade;
+        //此连接池无效
+        JDBCLogger.print("【异常】连接不可用,请尝试恢复,数据库连接信息: "+ facade.getManager().getAddress()+" "+facade.getManager().getDataBaseName()+" "+ facade.getManager().getSeq());
+        //获取任意一个连接
+        for (TomcatJDBCPool pool : list){
+            facade.setManager(pool);
+            if (facade.checkDBConnectionValid()) {
+                JDBCLogger.print("【异常】找到一个连接池替代,数据库连接信息: "+ facade.getManager().getAddress()+" "+facade.getManager().getDataBaseName()+" "+ facade.getManager().getSeq());
+                return facade;
+            }
+        }
+        return null;
+    }
+
+    public static JDBCSessionFacade getFacade(String databaseName) {
         return getFacade(databaseName,true);
     }
 
@@ -188,7 +216,7 @@ public class TomcatJDBC {
 
     public static List<TomcatJDBCPool> getSpecDataBasePoolList(String databaseName){
         List list =  poolGroupMap.get(databaseName);
-        if (list == null)   throw new JDBCException("a nonexistent database by '"+databaseName+"'");
+        if (list == null) throw new JDBCException("a nonexistent database by '"+databaseName+"'");
         return list;
     }
 

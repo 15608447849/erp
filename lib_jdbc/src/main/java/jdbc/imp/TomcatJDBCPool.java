@@ -1,19 +1,25 @@
 package jdbc.imp;
 
+import com.sun.mail.imap.protocol.ID;
 import jdbc.define.exception.JDBCException;
+import jdbc.define.option.JDBCSessionFacade;
 import jdbc.define.session.JDBCSessionManagerAbs;
 import jdbc.define.log.JDBCLogger;
 import jdbc.define.sync.SyncEnterI;
 import jdbc.define.sync.SyncTask;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
+import util.EncryptUtils;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.security.InvalidParameterException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @Author: leeping
@@ -22,6 +28,8 @@ import java.util.Properties;
 public class TomcatJDBCPool extends JDBCSessionManagerAbs{
 
     private DataSource dataSource;
+
+    private boolean isConnectionFail = false;
 
     @Override
     public void initialize(Object... args) {
@@ -38,6 +46,25 @@ public class TomcatJDBCPool extends JDBCSessionManagerAbs{
         }
     }
 
+    @Override
+    public boolean isConnectionFail() {
+        return isConnectionFail;
+    }
+
+    @Override
+    public void setConnectionFail(boolean isFail) {
+        dataSource.close(true);
+
+        this.isConnectionFail = true;
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                isConnectionFail = false;
+            }
+        },60 * 1000);
+    }
+
+
     private void loadProperties(InputStream is) throws IOException {
         Properties props = new Properties();
         props.load(is);
@@ -50,6 +77,7 @@ public class TomcatJDBCPool extends JDBCSessionManagerAbs{
         int mIndex = tmpDBSInfo.indexOf("/");
         address = tmpDBSInfo.substring(0, mIndex);
         dataBaseName = tmpDBSInfo.substring(mIndex + 1);
+        identity = EncryptUtils.encryption(address+"@"+dataBaseName);
 
         PoolProperties poolProperties = new PoolProperties();
         setPoolPropertiesValue(poolProperties,props);
@@ -57,7 +85,7 @@ public class TomcatJDBCPool extends JDBCSessionManagerAbs{
         dataSource.setPoolProperties(poolProperties);
         loadDefaultTransactionIsolationLevel();
         syncEnterI = new DBSyncThreadImp(this);
-        JDBCLogger.print("success load data source , address = " + address + ",database = " + dataBaseName+",seq = "+seq);
+        JDBCLogger.print("success load data source ," + address + " " + dataBaseName+",seq = "+seq);
     }
 
     private void setPoolPropertiesValue(PoolProperties poolProperties, Properties props) {

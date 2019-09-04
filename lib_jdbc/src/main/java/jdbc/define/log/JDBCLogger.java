@@ -19,8 +19,8 @@ public class JDBCLogger {
 
         @Override
         public void error(String desc, Throwable e) {
-            System.err.println(desc);
-            e.printStackTrace();
+            System.err.println(desc+"\n"+e);
+//            e.printStackTrace();
         }
     };
 

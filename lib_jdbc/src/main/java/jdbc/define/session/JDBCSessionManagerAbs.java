@@ -21,6 +21,8 @@ public abstract class JDBCSessionManagerAbs extends SessionManagerAbs<Connection
     protected String dataBaseName;
     protected Integer seq = -1;
 
+    protected String identity = null;
+
     public String getAddress() {
         return address;
     }
@@ -29,9 +31,14 @@ public abstract class JDBCSessionManagerAbs extends SessionManagerAbs<Connection
         return dataBaseName;
     }
 
+    public String getIdentity(){
+        return identity;
+    }
+
     public Integer getSeq() {
         return seq;
     }
+
 
     @Override
     public void loadDefaultTransactionIsolationLevel() {
@@ -154,7 +161,6 @@ public abstract class JDBCSessionManagerAbs extends SessionManagerAbs<Connection
 
     @Override
     public void addTask(SyncTask task) {
-
         try {
             if (syncEnterI!=null) syncEnterI.addTask(task);
         } catch (Exception e) {

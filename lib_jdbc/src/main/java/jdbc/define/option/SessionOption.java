@@ -13,11 +13,28 @@ public abstract class SessionOption<Manager extends SessionManagerI<S>, S>  impl
         this.manager = manager;
     }
 
+    public void setManager(Manager manager) {
+        this.manager = manager;
+    }
+
     public Manager getManager() {
         return this.manager;
     }
 
     protected S getSession() {
         return this.manager.getSession();
+    }
+
+    public boolean checkDBConnectionValid(){
+        try {
+            if (getManager().isConnectionFail()){
+                return false;
+            }
+            query("SELECT 1",null);
+            return true;
+        } catch (Exception ignored) {
+            getManager().setConnectionFail(true);
+        }
+        return false;
     }
 }

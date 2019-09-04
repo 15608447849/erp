@@ -1,5 +1,6 @@
 package jdbc.define.option;
 
+import jdbc.define.exception.JDBCException;
 import jdbc.define.session.SessionManagerI;
 import jdbc.define.tuples.Tuple2;
 
@@ -13,6 +14,7 @@ public class JDBCSessionFacadeWrap implements DaoApi{
     protected JDBCSessionFacade op;
 
     public JDBCSessionFacadeWrap(JDBCSessionFacade op) {
+        if (op == null) throw new JDBCException("invalid db connection pool object.");
         this.op = op;
     }
 

@@ -13,4 +13,5 @@ public interface SyncEnterI {
     void sendTask(SyncTask task);
     void cancel(SyncTask task);
     void closeDestroy();
+
 }

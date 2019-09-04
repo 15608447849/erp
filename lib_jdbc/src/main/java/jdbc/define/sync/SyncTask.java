@@ -1,6 +1,7 @@
 package jdbc.define.sync;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -8,29 +9,30 @@ import java.util.List;
  * @Date: 2019/8/17 20:47
  */
 public class SyncTask {
-    //标识-唯一
-    int id;
-    //执行的sql集合
-    List<String> sqlList;
-    List<Object[]> paramList;
-    String methodName;
-    int state;
 
+    //标识-唯一
+    private int id;
+    //执行的sql集合
+    private List<String> sqlList;
+    private List<Object[]> paramList;
+    private String methodFlag;
+    private int state;
+    private List<String> successDbList;
 
     public SyncTask() { }
 
-    public SyncTask(String sql, Object[] params, String methodName) {
+    public SyncTask(String sql, Object[] params, String methodFlag) {
         sqlList = new ArrayList<>();
         sqlList.add(sql);
         paramList = new ArrayList<>();
         paramList.add(params);
-        this.methodName = methodName;
+        this.methodFlag = methodFlag;
     }
 
-    public SyncTask(List<String> sqlList, List<Object[]> paramList, String methodName) {
+    public SyncTask(List<String> sqlList, List<Object[]> paramList, String methodFlag) {
         this.sqlList = sqlList;
         this.paramList = paramList;
-        this.methodName = methodName;
+        this.methodFlag = methodFlag;
     }
 
     public int getId() {
@@ -57,12 +59,12 @@ public class SyncTask {
         this.paramList = paramList;
     }
 
-    public String getMethodName() {
-        return methodName;
+    public String getMethodFlag() {
+        return methodFlag;
     }
 
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
+    public void setMethodFlag(String methodFlag) {
+        this.methodFlag = methodFlag;
     }
 
     public int getState() {
@@ -71,5 +73,32 @@ public class SyncTask {
 
     public void setState(int state) {
         this.state = state;
+    }
+
+    public List<String> getSuccessDbList() {
+        return successDbList;
+    }
+
+    public void setSuccessDbList(List<String> successDbList) {
+        this.successDbList = successDbList;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        s.append("id").append("= ").append(id).append(" , ");
+        s.append("SQL").append("= ").append(sqlList).append(" , ");
+        if (paramList!=null){
+            s.append("参数集").append("= ");
+            for (Object[] o : paramList){
+                s.append(Arrays.toString(o));
+            }
+            s.append(" , ");
+        }
+        s.append("methodFlag").append("= ").append(methodFlag).append(" , ");
+        s.append("state").append("= ").append(state).append(" , ");
+        s.append("successDbList").append("= ").append(successDbList);
+
+        return s.toString();
     }
 }

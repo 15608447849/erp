@@ -100,4 +100,28 @@ public class GsonUtils {
     }
 
 
+
+    private final static Gson builder =  new GsonBuilder()
+            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+            .registerTypeAdapter(Double.class, (JsonSerializer<Double>) (src, typeOfSrc, context) -> new JsonPrimitive(src.longValue()+""))
+            .registerTypeAdapter(Integer.class,(JsonSerializer<Integer>) (src, typeOfSrc, context) -> new JsonPrimitive(src+""))
+            .create();
+
+    public static String toJson(Object o){
+        return builder.toJson(o);
+    }
+
+    public static <T> List<T> toList(String json, Class<T> clazz){
+        List<T> list = new ArrayList<>();
+        try {
+            JsonArray array = new JsonParser().parse(json).getAsJsonArray();
+            for (JsonElement element : array) {
+                list.add(builder.fromJson(element, clazz));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
 }
