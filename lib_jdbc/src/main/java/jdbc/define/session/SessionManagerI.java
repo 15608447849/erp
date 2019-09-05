@@ -32,7 +32,5 @@ public interface SessionManagerI<S> {
 
     void rollback();
 
-    boolean isConnectionFail();
-
     void setConnectionFail(boolean isFail);
 }

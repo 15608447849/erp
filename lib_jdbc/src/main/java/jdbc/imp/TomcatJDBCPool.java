@@ -29,8 +29,6 @@ public class TomcatJDBCPool extends JDBCSessionManagerAbs{
 
     private DataSource dataSource;
 
-    private boolean isConnectionFail = false;
-
     @Override
     public void initialize(Object... args) {
         try {
@@ -46,22 +44,10 @@ public class TomcatJDBCPool extends JDBCSessionManagerAbs{
         }
     }
 
-    @Override
-    public boolean isConnectionFail() {
-        return isConnectionFail;
-    }
 
     @Override
     public void setConnectionFail(boolean isFail) {
         dataSource.close(true);
-
-        this.isConnectionFail = true;
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                isConnectionFail = false;
-            }
-        },60 * 1000);
     }
 
 

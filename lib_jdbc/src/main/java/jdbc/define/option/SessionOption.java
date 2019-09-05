@@ -27,9 +27,6 @@ public abstract class SessionOption<Manager extends SessionManagerI<S>, S>  impl
 
     public boolean checkDBConnectionValid(){
         try {
-            if (getManager().isConnectionFail()){
-                return false;
-            }
             query("SELECT 1",null);
             return true;
         } catch (Exception ignored) {
