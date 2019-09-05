@@ -71,7 +71,6 @@ public class TomcatJDBCPool extends JDBCSessionManagerAbs{
         dataSource.setPoolProperties(poolProperties);
         loadDefaultTransactionIsolationLevel();
         syncEnterI = new DBSyncThreadImp(this);
-        JDBCLogger.print("success load data source ," + address + " " + dataBaseName+",seq = "+seq);
     }
 
     private void setPoolPropertiesValue(PoolProperties poolProperties, Properties props) {

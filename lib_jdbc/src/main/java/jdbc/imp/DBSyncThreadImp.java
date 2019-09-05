@@ -206,7 +206,7 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
                 //记录到数据库
                 facade.execute(UPDATE, new Object[]{task.getState(), GsonUtils.toJson(task.getSuccessDbList()),result.getValue1() ,id});
 
-                JDBCLogger.print("【同步】目标数据库: " + p.getAddress()+" "+p.getDataBaseName() + " ,编号: " + p.getSeq() + ", "+task +" 执行结果: " + isSuccess);
+                JDBCLogger.print("【同步】目标数据库: " + p + ", "+task +" 执行结果: " + isSuccess);
 
                 if (!isSuccess) break; //如果失败,结束同步
             }
@@ -240,7 +240,7 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
                     if (i > 0 ) result = true;
                 }
             }else{
-                error = "数据库:"+dao.getManager().getAddress()+" "+dao.getManager().getDataBaseName()+" "+dao.getManager().getSeq()+" 连接失败!";
+                error = "数据库:"+dao.getManager() +" 连接失败!";
             }
         } catch (Exception e) {
             JDBCLogger.error("同步数据异常",e);
@@ -271,12 +271,12 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
                 }
 
             }
-        }, 30 * 1000,5 * 60 * 1000 );
+        }, 30 * 1000,60 * 60 * 1000 );
     }
 
     @Override
     public void run() {
-        JDBCLogger.print("【通知】数据库: "+pool.getAddress()+" "+pool.getDataBaseName()+" , seq = "+pool.getSeq()+" , 启动数据同步: "+ isRunning +" , "+getName() );
+        JDBCLogger.print("【通知】数据库: "+pool +" , 启动数据同步: "+ isRunning +" , "+getName() );
         //尝试恢复
         tryRecover();
         while (isRunning){
