@@ -26,12 +26,12 @@ public class DBConst {
     static {
         /************************服务关联的数据库连接池配置信息常量化******************************/
         put("globalServer", "db-global-0.properties");
-
-
     }
 
     public interface Table{
         /**************************可能需要用到的表常量化******************************************/
-        String TB_USER_INFO = "{{?tb_user_info}}";
+        String TB_SYS_USER = "{{?tb_sys_user}}"; //用户表
+        String TB_SYS_RESOURCE = "{{?tb_sys_resource}}";//资源表
+        String TB_SYS_ROLE = "{{?tb_sys_role}}";//角色表
     }
 }
