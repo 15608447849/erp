@@ -28,6 +28,20 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
         super(manager);
     }
 
+    private static String param2String(Object[] param){
+        if (param == null || param.length == 0) return "";
+        return Arrays.toString(param);
+    }
+
+    private static String param2String(List<Object[]> params){
+        StringBuilder sb = new StringBuilder();
+        for (Object[] arr : params){
+            sb.append(param2String(arr)).append(",");
+        }
+        if (sb.length()>0) sb.deleteCharAt(sb.length()-1);
+        return sb.toString();
+    }
+
     @Override
     public List<Object[]> query(String sql, Object[] params) {
 //        JDBCLogger.print(getManager().getAddress() + " , " +getManager().getDataBaseName()+"\n\t" + sql+" , "+ Arrays.toString(params));
@@ -49,7 +63,10 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
                 result.add(objs);
             }
         } catch (SQLException e) {
-            throw new JDBCException(sql + "\n" + Arrays.toString(params),e);
+            result.clear();
+            JDBCLogger.error(
+                    "【数据库错误】"+getManager()+"\nSQL:\t"+sql+"\n参数:\t"+param2String(params),
+                    e);
         } finally {
             closeSqlObject(pst, rs);
         }
@@ -99,7 +116,10 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
                 } catch (Exception ignored) { }
             }
         } catch (SQLException e) {
-            throw new JDBCException(e);
+            result.clear();
+            JDBCLogger.error(
+                    "【数据库错误】"+getManager()+"\nSQL:\t"+sql+"\n参数:\t"+param2String(params),
+                    e);
         } finally {
             closeSqlObject(pst, rs);
         }
@@ -118,13 +138,10 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
             setParameters(pst, params);
             result = pst.executeUpdate();
         } catch (SQLException e) {
-            JDBCLogger.print("【数据库错误】"+getManager().getDataBaseName() + " , "+ sql +" , "+ Arrays.toString(params));
-            if (e instanceof com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException){
-                JDBCLogger.print("插入数据失败,存在相同唯一键数据: "+ e);
-                result = -1;
-            }else{
-                throw new JDBCException(e);
-            }
+            result = -1;
+            JDBCLogger.error(
+                    "【数据库错误】"+getManager()+"\nSQL:\t"+sql+"\n参数:\t"+param2String(params),
+                    e);
         } finally {
             closeSqlObject(pst);
         }
@@ -153,7 +170,10 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
                 m.rollback();
             } catch (Exception ignored) {
             }
-            throw new JDBCException(e);
+            res = -1;
+            JDBCLogger.error(
+                    "【数据库错误】"+getManager()+"\nSQL:\t"+sqlList+"\n参数:\t"+param2String(paramList),
+                    e);
         }finally {
             m.setTransactionInvoking(false);
         }
@@ -187,7 +207,11 @@ public class JDBCSessionFacade extends SessionOption<JDBCSessionManagerAbs, Conn
                 }
             }
         } catch (SQLException e) {
-            throw new JDBCException(e);
+            result = -1;
+            generateKeys = null;
+            JDBCLogger.error(
+                    "【数据库错误】"+getManager()+"\nSQL:\t"+insetSql+"\n参数:\t"+param2String(params),
+                    e);
         } finally {
             closeSqlObject(pst, rs);
         }

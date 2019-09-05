@@ -35,12 +35,7 @@ public class JDBCLogger {
 
     public static void error(String desc,Throwable e){
         if (logger == null) return;
-        if (desc==null){
-            logger.error("",e);
-        }else{
-            logger.error(desc,e);
-        }
-
+        logger.error(desc==null?"":desc,e);
     }
 
 }

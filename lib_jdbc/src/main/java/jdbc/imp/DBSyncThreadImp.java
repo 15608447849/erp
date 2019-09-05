@@ -56,7 +56,7 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
     /* 通知执行 */
     private void notifyExecute() {
         synchronized (TABLE_NAME){
-            TABLE_NAME.notify();
+            TABLE_NAME.notifyAll();
         }
     }
 
@@ -109,7 +109,7 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
         if (i>0){
             task.setState(1);
         }
-       notifyExecute();
+        notifyExecute();
     }
 
     @Override
@@ -128,9 +128,9 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
 
     @Override
     public SyncTask tryTakeTask() {
+
         //查询 状态 = 1 的所有任务
         JDBCSessionFacade facade = new JDBCSessionFacade(pool);
-
         if (facade.checkDBConnectionValid()) {
             List<Object[]> list = facade.query(SELECT,null);
             if (list.size()==1){
@@ -180,6 +180,7 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
             if (list.size() == 1 && list.get(0).getIdentity().equals(pool.getIdentity())) {
                 JDBCLogger.print("【警告】数据库: "+ pool.getDataBaseName()+" , 未设置备份库,同步任务将于3天后删除(暂未实现删除功能)");
                 facade.execute(UPDATE,new Object[]{10,GsonUtils.toJson(task.getSuccessDbList()),"",id});
+                return;
             }
 
             outer:
@@ -266,13 +267,11 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
                             t.setState(1); //设置其状态为执行中
                             executeSync(t);
                         }
-                    } catch (Exception e) {
-
-                    }
+                    } catch (Exception ignored) { }
                 }
 
             }
-        }, 30 * 1000,60 * 1000 );
+        }, 30 * 1000,5 * 60 * 1000 );
     }
 
     @Override
@@ -287,8 +286,7 @@ public class DBSyncThreadImp extends Thread implements SyncEnterI, SyncExitI {
                 if (task != null){
                     executeSync(task);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception ignored) {
             }
         }
     }

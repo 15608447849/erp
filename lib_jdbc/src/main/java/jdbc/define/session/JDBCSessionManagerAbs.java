@@ -194,4 +194,9 @@ public abstract class JDBCSessionManagerAbs extends SessionManagerAbs<Connection
             JDBCLogger.error(null,e);
         }
     }
+
+    @Override
+    public String toString() {
+        return "「"+address+" "+dataBaseName+","+seq+"」";
+    }
 }
