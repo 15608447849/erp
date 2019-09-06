@@ -255,6 +255,7 @@ public class TomcatJDBC {
 
         //返回:  0-完整的sql, 1-库名
         private static Tuple2<String,List<String>> ergodicSqlFindAllTableNameReturnSQL(List<String> sqlList,int db_slice,int table_slice){
+
             if (sqlList==null || sqlList.size()==0) throw new JDBCException("sqlList is empty");
 
             List<String> nativeSqlList = new ArrayList<>();
